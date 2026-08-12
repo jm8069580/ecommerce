@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Package, Eye, Loader2 } from "lucide-react"
+import { Package, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

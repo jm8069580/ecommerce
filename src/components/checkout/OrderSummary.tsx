@@ -14,7 +14,6 @@ export function OrderSummary({ items }: OrderSummaryProps) {
     0
   )
   const shipping = subtotal >= 200 ? 0 : 15
-  const tax = subtotal * 0.18 // 18% IGV
   const total = subtotal + shipping
 
   return (

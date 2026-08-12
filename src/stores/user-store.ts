@@ -67,7 +67,7 @@ interface UserState {
   deleteAddress: (id: string) => Promise<void>
 }
 
-export const useUserStore = create<UserState>((set, get) => ({
+export const useUserStore = create<UserState>((set) => ({
   profile: null,
   addresses: [],
   orders: [],

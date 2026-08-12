@@ -8,7 +8,6 @@ import {
   CreditCard,
   Users,
   Settings,
-  ChevronLeft,
   Store,
 } from "lucide-react"
 import { cn } from "@/lib/utils"

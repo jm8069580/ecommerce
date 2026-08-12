@@ -2,8 +2,7 @@
 
 import { useState, useCallback } from "react"
 import Image from "next/image"
-import { Upload, X, Loader2, ImagePlus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { X, Loader2, ImagePlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface UploadedImage {
