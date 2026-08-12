@@ -4,7 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-BasicTechShop is an e-commerce application for computer products built with Next.js 16 (App Router), TypeScript, Tailwind CSS v4, and shadcn/ui. Currently in UI-only phase with mock data - backend integration (PostgreSQL/Prisma) planned for future.
+BasicTechShop is an e-commerce application for computer products. This repo is the **frontend**, built with Next.js 16 (App Router), TypeScript, Tailwind CSS v4, and shadcn/ui.
+
+### Nuevo enfoque: migración del backend a NestJS
+
+El backend (antes implementado como API routes de Next.js + Prisma + NextAuth + Stripe) se está **migrando a un API independiente en NestJS**: `../../nest/basictech-api`.
+
+- Mismo modelo de datos (Prisma/PostgreSQL `basictech_shop`).
+- Auth en Nest con **JWT** (access 15m + refresh 7d) en lugar de NextAuth.
+- Objetivo final: el frontend consuma `http://localhost:3001` (API Nest) y se eliminen las API routes de Next (`/api/*`).
+
+Estado de la migración:
+- ✅ Migrado a Nest: auth (register/login/refresh/me), products, catalog (categories/brands).
+- ⏳ Pendiente en Nest: orders, addresses, checkout/Stripe + webhook, upload/Cloudinary, admin dashboard, admin users.
+- 🔄 Mientras dure la transición el frontend sigue consumiendo las API routes de Next (`src/app/api/*`). No crear features nuevas en ellas; implementar en Nest y apuntar el frontend al nuevo API.
 
 ### Component Organization
 ```
@@ -12,19 +25,21 @@ src/components/
 ├── layout/      # Header, Footer, TopBar, MobileNav, ThemeToggle
 ├── home/        # HeroBanner, CategoryGrid, FeaturedProducts, BrandSection
 ├── products/    # ProductCard, ProductGrid, FilterSidebar, filters
-├── cart/        # CartItem, CartSummary
+├── cart/        # CartItem, CartSummary, StripeCheckoutButton
 ├── checkout/    # ShippingForm, PaymentForm, OrderSummary
-├── admin/       # AdminSidebar, AdminHeader, StatsCard
+├── admin/       # AdminSidebar, AdminHeader, StatsCard, ImageUpload
 ├── profile/     # ProfileSidebar, ProfileMobileNav
-├── providers/   # ThemeProvider (next-themes wrapper)
+├── providers/   # ThemeProvider, SessionProvider (next-themes/next-auth)
 └── ui/          # shadcn/ui components
 ```
 
 ### Data Layer
-- `src/data/mock-products.ts` - Products, categories, brands
+- `src/data/mock-products.ts` - Products, categories, brands (todavía usado por BrandSection, CategoryFilter, BrandFilter, checkout)
 - `src/data/mock-user.ts` - User profile, addresses, orders, favorites
 - `src/data/mock-admin.ts` - Admin stats, users, payments
 - `src/types/index.ts` - Core interfaces (Product, Category, CartItem, FilterState)
+
+> Nota: algunos componentes/páginas aún usan datos mock (checkout, favorites, admin/payments, filtros de marca/categoría). Verificar antes de asumir datos reales. Los datos reales vienen de las API routes (`/api/*`).
 
 ### Styling System
 - Tailwind CSS v4 with CSS variables in OKLCH color space
@@ -39,17 +54,19 @@ src/components/
 - useMemo for computed values (filtered/sorted products)
 - Layouts with nested routes for shared UI (admin, profile)
 - Mobile-first responsive design with Sheet components for mobile nav
+- Estado global con Zustand (`src/stores/`) para carrito, productos y usuario
+- Formularios con react-hook-form + zod
 
 ## Configuration
 
 - **Path alias**: `@/*` maps to `./src/*`
-- **Images**: Remote patterns configured for `images.unsplash.com`
+- **Images**: Remote patterns configured for `images.unsplash.com` y `res.cloudinary.com`
 - **shadcn/ui**: "new-york" style, "neutral" base color, lucide icons
+- **Variables de entorno**: `.env` (no versionado). NO contiene ni usa `NOTION_TOKEN` (token obsoleto removido; el MCP de Notion lee del entorno, no de este repo).
 
 ## Project Plan
 
-See `/docs/PLAN.md` for detailed implementation phases and roadmap.
-
+See `/docs/PLAN.md` for the original implementation plan. El plan actual es la migración del backend a NestJS (`../../nest/basictech-api`).
 
 ## Rules
 
