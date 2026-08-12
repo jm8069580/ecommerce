@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAuth } from "@/lib/authorization"
+import { addressSchema } from "@/lib/validations"
 
 type Params = Promise<{ id: string }>
+
+async function getOwnedAddress(id: string, userId: string) {
+  const address = await prisma.address.findUnique({
+    where: { id },
+  })
+
+  if (!address || address.userId !== userId) {
+    return null
+  }
+
+  return address
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Params }
 ) {
   try {
-    const { id } = await params
+    const { session, error } = await requireAuth()
+    if (error) return error
 
-    const address = await prisma.address.findUnique({
-      where: { id },
-    })
+    const { id } = await params
+    const address = await getOwnedAddress(id, session.user.id!)
 
     if (!address) {
       return NextResponse.json(
@@ -46,18 +60,27 @@ export async function PUT(
   { params }: { params: Params }
 ) {
   try {
+    const { session, error } = await requireAuth()
+    if (error) return error
+
     const { id } = await params
-    const body = await request.json()
+    const body = addressSchema.parse(await request.json())
+    const userId = session.user.id!
+
+    const existing = await getOwnedAddress(id, userId)
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Address not found" },
+        { status: 404 }
+      )
+    }
 
     // If setting as default, unset other defaults
     if (body.isDefault) {
-      const address = await prisma.address.findUnique({ where: { id } })
-      if (address) {
-        await prisma.address.updateMany({
-          where: { userId: address.userId, isDefault: true, id: { not: id } },
-          data: { isDefault: false },
-        })
-      }
+      await prisma.address.updateMany({
+        where: { userId, isDefault: true, id: { not: id } },
+        data: { isDefault: false },
+      })
     }
 
     const address = await prisma.address.update({
@@ -99,7 +122,18 @@ export async function DELETE(
   { params }: { params: Params }
 ) {
   try {
+    const { session, error } = await requireAuth()
+    if (error) return error
+
     const { id } = await params
+    const existing = await getOwnedAddress(id, session.user.id!)
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Address not found" },
+        { status: 404 }
+      )
+    }
 
     await prisma.address.delete({
       where: { id },

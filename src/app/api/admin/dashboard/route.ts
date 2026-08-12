@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/authorization"
 
 export async function GET() {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
     // Get all stats in parallel
     const [
       totalProducts,

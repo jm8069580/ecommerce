@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { transformCategory } from "@/lib/transformers"
+import { requireAdmin } from "@/lib/authorization"
+import { categorySchema } from "@/lib/validations"
 
 export async function GET() {
   try {
@@ -25,7 +27,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const { error } = await requireAdmin()
+    if (error) return error
+
+    const body = categorySchema.parse(await request.json())
 
     const category = await prisma.category.create({
       data: {

@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { requireAuth } from "@/lib/authorization"
+import { addressSchema } from "@/lib/validations"
 
 export async function GET() {
   try {
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    const { session, error } = await requireAuth()
+    if (error) return error
 
     const addresses = await prisma.address.findMany({
       where: { userId: session.user.id },
@@ -42,17 +37,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const { session, error } = await requireAuth()
+    if (error) return error
 
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
-
-    const body = await request.json()
-    const userId = session.user.id
+    const body = addressSchema.parse(await request.json())
+    const userId = session.user.id!
 
     // If this is set as default, unset other defaults
     if (body.isDefault) {

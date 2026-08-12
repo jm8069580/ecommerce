@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/authorization"
+import { userCreateSchema } from "@/lib/validations"
 
 export async function GET(request: NextRequest) {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const role = searchParams.get("role")
     const status = searchParams.get("status")
@@ -63,16 +69,32 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const { error } = await requireAdmin()
+    if (error) return error
 
-    // In a real app, you'd hash the password here
+    const body = userCreateSchema.parse(await request.json())
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: body.email },
+    })
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "El email ya está registrado" },
+        { status: 400 }
+      )
+    }
+
+    const hashedPassword = await bcrypt.hash(body.password, 10)
+
     const user = await prisma.user.create({
       data: {
         email: body.email,
-        password: body.password, // Should be hashed
+        password: hashedPassword,
         name: body.name,
-        phone: body.phone,
-        role: body.role?.toUpperCase() || "CUSTOMER",
+        phone: body.phone || null,
+        role: body.role.toUpperCase() as "ADMIN" | "MODERATOR" | "CUSTOMER",
         status: "ACTIVE",
       },
     })

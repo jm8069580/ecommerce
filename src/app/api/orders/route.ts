@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/lib/auth"
+import { requireAuth } from "@/lib/authorization"
+import { orderCreateSchema } from "@/lib/validations"
 
 export async function GET() {
   try {
     // Get authenticated user
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      )
-    }
+    const { session, error } = await requireAuth()
+    if (error) return error
 
     const orders = await prisma.order.findMany({
       where: { userId: session.user.id },
@@ -61,7 +56,23 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const { session, error } = await requireAuth()
+    if (error) return error
+
+    const body = orderCreateSchema.parse(await request.json())
+    const userId = session.user.id!
+
+    // Verify the address belongs to the authenticated user
+    const address = await prisma.address.findUnique({
+      where: { id: body.addressId },
+    })
+
+    if (!address || address.userId !== userId) {
+      return NextResponse.json(
+        { error: "Dirección no encontrada" },
+        { status: 404 }
+      )
+    }
 
     // Generate order number
     const orderCount = await prisma.order.count()
@@ -76,10 +87,10 @@ export async function POST(request: NextRequest) {
         total: body.total,
         paymentMethod: body.paymentMethod,
         notes: body.notes,
-        userId: body.userId,
+        userId,
         addressId: body.addressId,
         items: {
-          create: body.items.map((item: { productId: string; name: string; price: number; quantity: number }) => ({
+          create: body.items.map((item) => ({
             name: item.name,
             price: item.price,
             quantity: item.quantity,

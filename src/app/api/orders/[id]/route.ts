@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAuth, requireAdmin } from "@/lib/authorization"
+import { orderStatusSchema } from "@/lib/validations"
 
 type Params = Promise<{ id: string }>
 
@@ -8,6 +10,9 @@ export async function GET(
   { params }: { params: Params }
 ) {
   try {
+    const { session, error } = await requireAuth()
+    if (error) return error
+
     const { id } = await params
 
     const order = await prisma.order.findUnique({
@@ -31,6 +36,17 @@ export async function GET(
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
+      )
+    }
+
+    // Only the owner or an admin can view the order
+    const isOwner = order.userId === session.user.id
+    const isAdmin = session.user.role === "ADMIN"
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
       )
     }
 
@@ -81,13 +97,22 @@ export async function PUT(
   { params }: { params: Params }
 ) {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
+
     const { id } = await params
-    const body = await request.json()
+    const body = orderStatusSchema.parse(await request.json())
 
     const order = await prisma.order.update({
       where: { id },
       data: {
-        status: body.status?.toUpperCase(),
+        status: body.status.toUpperCase() as
+          | "PENDING"
+          | "CONFIRMED"
+          | "PROCESSING"
+          | "SHIPPED"
+          | "DELIVERED"
+          | "CANCELLED",
         notes: body.notes,
       },
     })

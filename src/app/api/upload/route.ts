@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cloudinary } from "@/lib/cloudinary"
+import { requireAdmin } from "@/lib/authorization"
 
 export async function POST(request: NextRequest) {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
+
     const formData = await request.formData()
     const file = formData.get("file") as File | null
 
@@ -73,6 +77,9 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
+
     const { searchParams } = new URL(request.url)
     const publicId = searchParams.get("publicId")
 

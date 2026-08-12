@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
+import { requireAdmin } from "@/lib/authorization"
+import { productSchema } from "@/lib/validations"
+import type { Prisma } from "@prisma/client"
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,7 +102,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const { error } = await requireAdmin()
+    if (error) return error
+
+    const body = productSchema.parse(await request.json())
 
     const product = await prisma.product.create({
       data: {
@@ -110,7 +116,7 @@ export async function POST(request: NextRequest) {
         comparePrice: body.comparePrice,
         stock: body.stock || 0,
         images: body.images || [],
-        specs: body.specs || {},
+        specs: body.specs ? (body.specs as Prisma.InputJsonValue) : undefined,
         isNew: body.isNew || false,
         isFeatured: body.isFeatured || false,
         categoryId: body.categoryId,

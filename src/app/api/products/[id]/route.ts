@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { transformProduct } from "@/lib/transformers"
+import { requireAdmin } from "@/lib/authorization"
+import { productSchema } from "@/lib/validations"
+import type { Prisma } from "@prisma/client"
 
 type Params = Promise<{ id: string }>
 
@@ -45,8 +48,11 @@ export async function PUT(
   { params }: { params: Params }
 ) {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
+
     const { id } = await params
-    const body = await request.json()
+    const body = productSchema.parse(await request.json())
 
     const product = await prisma.product.update({
       where: { id },
@@ -58,7 +64,7 @@ export async function PUT(
         comparePrice: body.comparePrice,
         stock: body.stock,
         images: body.images,
-        specs: body.specs,
+        specs: body.specs ? (body.specs as Prisma.InputJsonValue) : undefined,
         isNew: body.isNew,
         isFeatured: body.isFeatured,
         isActive: body.isActive,
@@ -86,6 +92,9 @@ export async function DELETE(
   { params }: { params: Params }
 ) {
   try {
+    const { error } = await requireAdmin()
+    if (error) return error
+
     const { id } = await params
 
     await prisma.product.delete({
