@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { api } from "@/lib/api"
 
 interface DashboardStats {
   totalProducts: number
@@ -104,9 +105,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   fetchDashboard: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch("/api/admin/dashboard")
-      if (!response.ok) throw new Error("Error fetching dashboard")
-      const data = await response.json()
+      const data = await api.get<{
+        stats: DashboardStats
+        ordersByStatus: OrdersByStatus
+        recentOrders: RecentOrder[]
+      }>("/admin/dashboard")
       set({
         stats: data.stats,
         ordersByStatus: data.ordersByStatus,
@@ -126,9 +129,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       if (params.limit) searchParams.set("limit", params.limit.toString())
       if (params.offset) searchParams.set("offset", params.offset.toString())
 
-      const response = await fetch(`/api/admin/orders?${searchParams}`)
-      if (!response.ok) throw new Error("Error fetching orders")
-      const data = await response.json()
+      const data = await api.get<{ orders: AdminOrder[]; total: number }>(
+        `/admin/orders?${searchParams}`
+      )
       set({
         orders: data.orders,
         ordersTotal: data.total,
@@ -146,9 +149,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       if (params.role) searchParams.set("role", params.role)
       if (params.status) searchParams.set("status", params.status)
 
-      const response = await fetch(`/api/users?${searchParams}`)
-      if (!response.ok) throw new Error("Error fetching users")
-      const users = await response.json()
+      const users = await api.get<AdminUser[]>(`/users?${searchParams}`)
       set({ users, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -158,12 +159,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   updateOrderStatus: async (id, status) => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch(`/api/orders/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      })
-      if (!response.ok) throw new Error("Error updating order")
+      await api.put(`/orders/${id}`, { status })
 
       // Refresh orders after update
       await get().fetchOrders()

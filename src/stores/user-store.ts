@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { api } from "@/lib/api"
 
 interface Address {
   id: string
@@ -79,9 +80,7 @@ export const useUserStore = create<UserState>((set) => ({
   fetchAddresses: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch("/api/addresses")
-      if (!response.ok) throw new Error("Error fetching addresses")
-      const addresses = await response.json()
+      const addresses = await api.get<Address[]>("/addresses")
       set({ addresses, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -91,9 +90,7 @@ export const useUserStore = create<UserState>((set) => ({
   fetchOrders: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch("/api/orders")
-      if (!response.ok) throw new Error("Error fetching orders")
-      const orders = await response.json()
+      const orders = await api.get<Order[]>("/orders")
       set({ orders, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -103,13 +100,7 @@ export const useUserStore = create<UserState>((set) => ({
   createAddress: async (data) => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch("/api/addresses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error("Error creating address")
-      const address = await response.json()
+      const address = await api.post<Address>("/addresses", data)
       set((state) => ({
         addresses: data.isDefault
           ? [
@@ -129,13 +120,7 @@ export const useUserStore = create<UserState>((set) => ({
   updateAddress: async (id, data) => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch(`/api/addresses/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error("Error updating address")
-      const address = await response.json()
+      const address = await api.put<Address>(`/addresses/${id}`, data)
       set((state) => ({
         addresses: state.addresses.map((a) =>
           a.id === id
@@ -156,10 +141,7 @@ export const useUserStore = create<UserState>((set) => ({
   deleteAddress: async (id) => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch(`/api/addresses/${id}`, {
-        method: "DELETE",
-      })
-      if (!response.ok) throw new Error("Error deleting address")
+      await api.delete(`/addresses/${id}`)
       set((state) => ({
         addresses: state.addresses.filter((a) => a.id !== id),
         loading: false,

@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { Product, Category, Brand, FilterState } from "@/types"
+import { api } from "@/lib/api"
 
 interface ProductsState {
   products: Product[]
@@ -57,10 +58,9 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
         params.set("sortBy", filters.sortBy)
       }
 
-      const response = await fetch(`/api/products?${params.toString()}`)
-      if (!response.ok) throw new Error("Failed to fetch products")
-
-      const data = await response.json()
+      const data = await api.get<{ products: Product[] }>(
+        `/products?${params.toString()}`
+      )
       set({ products: data.products, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -69,10 +69,9 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
 
   fetchFeaturedProducts: async () => {
     try {
-      const response = await fetch("/api/products?featured=true&limit=8")
-      if (!response.ok) throw new Error("Failed to fetch featured products")
-
-      const data = await response.json()
+      const data = await api.get<{ products: Product[] }>(
+        "/products?featured=true&limit=8"
+      )
       set({ featuredProducts: data.products })
     } catch (error) {
       console.error("Error fetching featured products:", error)
@@ -81,10 +80,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
 
   fetchCategories: async () => {
     try {
-      const response = await fetch("/api/categories")
-      if (!response.ok) throw new Error("Failed to fetch categories")
-
-      const categories = await response.json()
+      const categories = await api.get<Category[]>("/categories")
       set({ categories })
     } catch (error) {
       console.error("Error fetching categories:", error)
@@ -93,10 +89,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
 
   fetchBrands: async () => {
     try {
-      const response = await fetch("/api/brands")
-      if (!response.ok) throw new Error("Failed to fetch brands")
-
-      const brands = await response.json()
+      const brands = await api.get<Brand[]>("/brands")
       set({ brands })
     } catch (error) {
       console.error("Error fetching brands:", error)
