@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { api } from "@/lib/api"
 
 const userSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -48,13 +49,7 @@ export default function NewUserPage() {
   const onSubmit = async (data: UserFormData) => {
     setSaving(true)
     try {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) throw new Error("Error creating user")
+      await api.post("/users", data)
 
       router.push("/admin/users")
     } catch (error) {

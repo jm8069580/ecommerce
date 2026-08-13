@@ -17,6 +17,7 @@ import { ProductGallery } from "@/components/products/ProductGallery"
 import { ProductDetail } from "@/components/products/ProductDetail"
 import { ProductCard } from "@/components/products/ProductCard"
 import { Product } from "@/types"
+import { api } from "@/lib/api"
 
 interface ProductPageProps {
   params: Promise<{ id: string }>
@@ -33,32 +34,22 @@ export default function ProductPage({ params }: ProductPageProps) {
     async function fetchProduct() {
       try {
         setLoading(true)
-        const response = await fetch(`/api/products/${id}`)
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError("not_found")
-          } else {
-            throw new Error("Failed to fetch product")
-          }
-          return
-        }
-
-        const data = await response.json()
+        const data = await api.get<Product>(`/products/${id}`)
         setProduct(data)
 
         // Fetch related products
-        const relatedResponse = await fetch(
-          `/api/products?category=${data.category}&limit=4`
+        const relatedData = await api.get<{ products: Product[] }>(
+          `/products?category=${data.category}&limit=4`
         )
-        if (relatedResponse.ok) {
-          const relatedData = await relatedResponse.json()
-          setRelatedProducts(
-            relatedData.products.filter((p: Product) => p.id !== data.id).slice(0, 4)
-          )
-        }
+        setRelatedProducts(
+          relatedData.products.filter((p: Product) => p.id !== data.id).slice(0, 4)
+        )
       } catch (err) {
-        setError("error")
+        if (err instanceof Error && "status" in err && (err as { status: number }).status === 404) {
+          setError("not_found")
+        } else {
+          setError("error")
+        }
         console.error("Error fetching product:", err)
       } finally {
         setLoading(false)

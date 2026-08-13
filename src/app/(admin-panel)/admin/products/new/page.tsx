@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ImageUpload } from "@/components/admin/ImageUpload"
+import { api } from "@/lib/api"
 
 interface UploadedImage {
   url: string
@@ -80,13 +81,10 @@ export default function NewProductPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, brandsRes] = await Promise.all([
-          fetch("/api/categories"),
-          fetch("/api/brands"),
+        const [categoriesData, brandsData] = await Promise.all([
+          api.get<Category[]>("/categories"),
+          api.get<Brand[]>("/brands"),
         ])
-
-        const categoriesData = await categoriesRes.json()
-        const brandsData = await brandsRes.json()
 
         setCategories(categoriesData || [])
         setBrands(brandsData || [])
@@ -117,16 +115,10 @@ export default function NewProductPage() {
 
     setSaving(true)
     try {
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          images: images.map((img) => img.url),
-        }),
+      await api.post("/products", {
+        ...data,
+        images: images.map((img) => img.url),
       })
-
-      if (!response.ok) throw new Error("Error creating product")
 
       router.push("/admin/products")
     } catch (error) {

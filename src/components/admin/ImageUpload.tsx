@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import Image from "next/image"
 import { X, Loader2, ImagePlus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { api } from "@/lib/api"
 
 interface UploadedImage {
   url: string
@@ -35,17 +36,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
           const formData = new FormData()
           formData.append("file", file)
 
-          const response = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
-          })
-
-          if (!response.ok) {
-            const error = await response.json()
-            throw new Error(error.error || "Error al subir imagen")
-          }
-
-          return response.json()
+          return api.upload<UploadedImage>("/upload", formData)
         })
 
         const results = await Promise.all(uploadPromises)
@@ -65,9 +56,7 @@ export function ImageUpload({ value = [], onChange, maxImages = 5 }: ImageUpload
 
       // Eliminar de Cloudinary
       try {
-        await fetch(`/api/upload?publicId=${encodeURIComponent(imageToRemove.publicId)}`, {
-          method: "DELETE",
-        })
+        await api.delete(`/upload?publicId=${encodeURIComponent(imageToRemove.publicId)}`)
       } catch (error) {
         console.error("Error deleting image from Cloudinary:", error)
       }

@@ -41,6 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { api } from "@/lib/api"
 
 interface Product {
   id: string
@@ -108,13 +109,10 @@ export default function AdminProductsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/categories"),
+        const [productsData, categoriesData] = await Promise.all([
+          api.get<{ products: Product[] }>("/products"),
+          api.get<Category[]>("/categories"),
         ])
-
-        const productsData = await productsRes.json()
-        const categoriesData = await categoriesRes.json()
 
         setProducts(productsData.products || [])
         setCategories(categoriesData || [])
@@ -132,12 +130,8 @@ export default function AdminProductsPage() {
     if (!deleteId) return
     setDeleting(true)
     try {
-      const response = await fetch(`/api/products/${deleteId}`, {
-        method: "DELETE",
-      })
-      if (response.ok) {
-        setProducts(products.filter((p) => p.id !== deleteId))
-      }
+      await api.delete(`/products/${deleteId}`)
+      setProducts(products.filter((p) => p.id !== deleteId))
     } catch (error) {
       console.error("Error deleting product:", error)
     } finally {
