@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import { useSession } from "next-auth/react"
 import { Camera, Pencil } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -11,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUserStore } from "@/stores/user-store"
+import { useAuthStore } from "@/stores/auth-store"
 
 function ProfileSkeleton() {
   return (
@@ -42,20 +42,18 @@ function ProfileSkeleton() {
 }
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { user, status } = useAuthStore()
   const { orders, fetchOrders } = useUserStore()
 
   useEffect(() => {
-    if (session?.user) {
+    if (user) {
       fetchOrders()
     }
-  }, [session, fetchOrders])
+  }, [user, fetchOrders])
 
   if (status === "loading") {
     return <ProfileSkeleton />
   }
-
-  const user = session?.user
 
   const stats = {
     totalOrders: orders.length,

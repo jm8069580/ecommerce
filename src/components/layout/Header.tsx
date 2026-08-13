@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore } from "react"
 import Link from "next/link"
-import { useSession, signOut } from "next-auth/react"
 import { Search, ShoppingCart, Heart, User, LogOut, Settings, Package, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +17,7 @@ import {
 import { ThemeToggle } from "./ThemeToggle"
 import { MobileNav } from "./MobileNav"
 import { useCartStore } from "@/stores/cart-store"
+import { useAuthStore } from "@/stores/auth-store"
 
 export function Header() {
   const mounted = useSyncExternalStore(
@@ -26,7 +26,7 @@ export function Header() {
     () => false
   )
   const itemCount = useCartStore((state) => state.getItemCount())
-  const { data: session, status } = useSession()
+  const { user, status, logout } = useAuthStore()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -94,13 +94,13 @@ export function Header() {
             {/* Auth Section */}
             {mounted && status !== "loading" && (
               <>
-                {session ? (
+                {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="hidden h-9 gap-1 px-2 sm:flex">
                         <User className="h-4 w-4" />
                         <span className="max-w-24 truncate text-sm">
-                          {session.user?.name?.split(" ")[0]}
+                          {user.name?.split(" ")[0]}
                         </span>
                         <ChevronDown className="h-3 w-3" />
                       </Button>
@@ -108,9 +108,9 @@ export function Header() {
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuLabel>
                         <div className="flex flex-col">
-                          <span className="font-medium">{session.user?.name}</span>
+                          <span className="font-medium">{user.name}</span>
                           <span className="text-xs text-muted-foreground">
-                            {session.user?.email}
+                            {user.email}
                           </span>
                         </div>
                       </DropdownMenuLabel>
@@ -133,7 +133,7 @@ export function Header() {
                           Configuración
                         </Link>
                       </DropdownMenuItem>
-                      {session.user?.role === "ADMIN" && (
+                      {user.role === "ADMIN" && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild>
@@ -146,7 +146,7 @@ export function Header() {
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => signOut({ callbackUrl: "/" })}
+                        onClick={() => logout()}
                         className="cursor-pointer text-destructive focus:text-destructive"
                       >
                         <LogOut className="mr-2 h-4 w-4" />

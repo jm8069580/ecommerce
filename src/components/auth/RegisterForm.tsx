@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { signIn } from "next-auth/react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +23,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { useAuthStore } from "@/stores/auth-store"
 
 const registerSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -40,9 +40,10 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export function RegisterForm() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const register = useAuthStore((state) => state.register)
 
   const {
-    register,
+    register: registerField,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
@@ -53,38 +54,10 @@ export function RegisterForm() {
     setError(null)
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        setError(result.error || "Error al registrar usuario")
-        return
-      }
-
-      const signInResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      })
-
-      if (signInResult?.error) {
-        router.push("/login")
-        return
-      }
-
+      await register(data.name, data.email, data.password)
       router.push("/")
-      router.refresh()
-    } catch {
-      setError("Error al registrar usuario")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al registrar usuario")
     }
   }
 
@@ -111,7 +84,7 @@ export function RegisterForm() {
                   id="name"
                   type="text"
                   placeholder="Juan Pérez"
-                  {...register("name")}
+                  {...registerField("name")}
                 />
                 {errors.name && (
                   <FieldError>{errors.name.message}</FieldError>
@@ -123,7 +96,7 @@ export function RegisterForm() {
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
-                  {...register("email")}
+                  {...registerField("email")}
                 />
                 {errors.email && (
                   <FieldError>{errors.email.message}</FieldError>
@@ -136,7 +109,7 @@ export function RegisterForm() {
                     <Input
                       id="password"
                       type="password"
-                      {...register("password")}
+                      {...registerField("password")}
                     />
                     {errors.password && (
                       <FieldError>{errors.password.message}</FieldError>
@@ -149,7 +122,7 @@ export function RegisterForm() {
                     <Input
                       id="confirmPassword"
                       type="password"
-                      {...register("confirmPassword")}
+                      {...registerField("confirmPassword")}
                     />
                     {errors.confirmPassword && (
                       <FieldError>{errors.confirmPassword.message}</FieldError>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { userProfile } from "@/data/mock-user"
+import { useAuthStore } from "@/stores/auth-store"
 
 const navigation = [
   { name: "Mi Perfil", href: "/profile", icon: User },
@@ -19,19 +19,26 @@ const navigation = [
 
 export function ProfileSidebar() {
   const pathname = usePathname()
+  const { user, logout } = useAuthStore()
+  const name = user?.name || "Usuario"
+  const initials =
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "U"
 
   return (
     <aside className="space-y-6">
       {/* User Info */}
       <div className="flex items-center gap-4">
         <Avatar className="h-16 w-16">
-          <AvatarFallback className="text-lg">
-            {userProfile.name.split(" ").map((n) => n[0]).join("")}
-          </AvatarFallback>
+          <AvatarFallback className="text-lg">{initials}</AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="font-semibold">{userProfile.name}</h2>
-          <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+          <h2 className="font-semibold">{name}</h2>
+          <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
       </div>
 
@@ -62,7 +69,11 @@ export function ProfileSidebar() {
       <Separator />
 
       {/* Logout */}
-      <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-destructive">
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-muted-foreground hover:text-destructive"
+        onClick={() => logout()}
+      >
         <LogOut className="mr-3 h-4 w-4" />
         Cerrar Sesion
       </Button>

@@ -6,12 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { signIn } from "next-auth/react"
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuthStore } from "@/stores/auth-store"
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -26,6 +26,7 @@ export function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/"
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const login = useAuthStore((state) => state.login)
 
   const {
     register,
@@ -38,19 +39,12 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setError(null)
 
-    const result = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    })
-
-    if (result?.error) {
-      setError("Email o contraseña incorrectos")
-      return
+    try {
+      await login(data.email, data.password)
+      router.push(callbackUrl)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Email o contraseña incorrectos")
     }
-
-    router.push(callbackUrl)
-    router.refresh()
   }
 
   return (
