@@ -16,8 +16,8 @@ Este repo es el **frontend** en Next.js. El backend (antes API routes de Next.js
 
 - Mismo modelo de datos Prisma/PostgreSQL (`basictech_shop`).
 - Autenticación con JWT (access + refresh) en lugar de NextAuth.
-- Durante la transición, el frontend sigue consumiendo las API routes de Next (`/api/*`).
-- Objetivo: el frontend consuma `http://localhost:3001` (API Nest) y se eliminen las API routes.
+- El frontend consume el API independiente de NestJS en `http://localhost:3001` mediante `src/lib/api.ts`.
+- Las API routes de Next y NextAuth ya no forman parte de este proyecto.
 
 > Detalles y estado de la migración en `../nest/basictech-api/CLAUDE.md`.
 
@@ -32,7 +32,7 @@ Este repo es el **frontend** en Next.js. El backend (antes API routes de Next.js
 | Prisma | ORM |
 | PostgreSQL | Base de datos |
 | Zustand | Estado global |
-| NextAuth.js | Autenticación (en transición a JWT/Nest) |
+| JWT | Autenticación gestionada por el API NestJS |
 | NestJS 11 | Backend (migración) |
 
 ## Requisitos
@@ -52,13 +52,12 @@ cd ecommerce-basictech
 npm install
 
 # Configurar variables de entorno
-# Copiar las que apliquen a este repo (DATABASE_URL, AUTH_SECRET, NEXTAUTH_URL)
-# No existe .env.example; la base de datos y migraciones se gestionan desde ../nest/basictech-api
+cp .env.example .env
 
 # Iniciar base de datos con Docker (opcional)
 docker-compose up -d
 
-# Sembrar datos iniciales
+# Sembrar datos iniciales (opcional; normalmente se ejecuta desde basictech-api)
 npm run db:seed
 ```
 
