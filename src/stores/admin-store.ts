@@ -38,6 +38,7 @@ interface AdminOrder {
   shipping: number
   total: number
   paymentMethod: string
+  stripeSessionId?: string
   shippingAddress: {
     name: string
     address: string

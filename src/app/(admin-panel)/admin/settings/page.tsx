@@ -1,6 +1,7 @@
 "use client"
 
-import { Save } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { Save, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,8 +16,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useConfigStore } from "@/stores/config-store"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AdminSettingsPage() {
+  const { config, fetchConfig, loading } = useConfigStore()
+
+  const initialValues = useMemo(
+    () =>
+      config
+        ? {
+            appName: config.appName,
+            currency: config.currency,
+            freeShippingThreshold: String(config.freeShippingThreshold),
+            taxRate: String(config.taxRate),
+          }
+        : null,
+    [config]
+  )
+
+  const [appName, setAppName] = useState(initialValues?.appName ?? "")
+  const [currency, setCurrency] = useState(initialValues?.currency ?? "pen")
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(
+    initialValues?.freeShippingThreshold ?? "200"
+  )
+  const [taxRate, setTaxRate] = useState(initialValues?.taxRate ?? "0")
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    fetchConfig()
+  }, [fetchConfig])
+
+  const handleSave = () => {
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  if (loading && !config) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -48,7 +93,11 @@ export default function AdminSettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nombre de la tienda</Label>
-                  <Input id="storeName" defaultValue="BasicTechShop" />
+                  <Input
+                    id="storeName"
+                    value={appName}
+                    onChange={(e) => setAppName(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="storeEmail">Email de contacto</Label>
@@ -99,7 +148,7 @@ export default function AdminSettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Moneda</Label>
-                  <Select defaultValue="pen">
+                  <Select value={currency} onValueChange={setCurrency}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -159,22 +208,36 @@ export default function AdminSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Envio</CardTitle>
+              <CardTitle>Envio e Impuestos</CardTitle>
               <CardDescription>
-                Configura las opciones de envio
+                Configura las opciones de envio e impuestos
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Costo de envio estandar</Label>
-                  <Input type="number" defaultValue="15" />
+                  <Label>Envio gratis desde (S/)</Label>
+                  <Input
+                    type="number"
+                    value={freeShippingThreshold}
+                    onChange={(e) => setFreeShippingThreshold(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Envio gratis desde (S/)</Label>
-                  <Input type="number" defaultValue="200" />
+                  <Label>Tasa de impuesto (0.18 = 18%)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                  />
                 </div>
               </div>
+              {config && (
+                <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                  Paises de envio permitidos: {config.shippingCountries.join(", ")}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -288,9 +351,18 @@ export default function AdminSettingsPage() {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button>
-          <Save className="mr-2 h-4 w-4" />
-          Guardar Cambios
+        <Button onClick={handleSave}>
+          {saved ? (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Guardado
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Guardar Cambios
+            </>
+          )}
         </Button>
       </div>
     </div>

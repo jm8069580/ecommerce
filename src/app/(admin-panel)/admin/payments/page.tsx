@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Search, Download, Eye, MoreHorizontal, RefreshCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,45 +28,169 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { payments } from "@/data/mock-admin"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAdminStore } from "@/stores/admin-store"
 
-const statusConfig = {
-  completed: { label: "Completado", variant: "default" as const, className: "bg-green-600" },
-  pending: { label: "Pendiente", variant: "secondary" as const, className: "" },
-  failed: { label: "Fallido", variant: "destructive" as const, className: "" },
-  refunded: { label: "Reembolsado", variant: "outline" as const, className: "" },
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className: string }> = {
+  PENDING: { label: "Pendiente", variant: "secondary", className: "" },
+  CONFIRMED: { label: "Confirmado", variant: "default", className: "bg-green-600" },
+  PROCESSING: { label: "Procesando", variant: "secondary", className: "" },
+  SHIPPED: { label: "Enviado", variant: "default", className: "bg-blue-600" },
+  DELIVERED: { label: "Entregado", variant: "default", className: "bg-green-600" },
+  CANCELLED: { label: "Cancelado", variant: "destructive", className: "" },
 }
 
-const methodLabels = {
-  card: "Tarjeta",
-  transfer: "Transferencia",
-  wallet: "Billetera",
+const methodLabels: Record<string, string> = {
+  CARD: "Tarjeta",
+  TRANSFER: "Transferencia",
+  WALLET: "Billetera",
+  CASH_ON_DELIVERY: "Contra entrega",
 }
 
 export default function AdminPaymentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesSearch =
-      payment.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.orderId.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || payment.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const { orders, loading, fetchOrders } = useAdminStore()
 
-  const totalRevenue = payments
-    .filter((p) => p.status === "completed")
-    .reduce((sum, p) => sum + p.amount, 0)
+  useEffect(() => {
+    fetchOrders({ limit: 100 })
+  }, [fetchOrders])
 
-  const pendingAmount = payments
-    .filter((p) => p.status === "pending")
-    .reduce((sum, p) => sum + p.amount, 0)
+  const filteredPayments = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesSearch =
+        order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.stripeSessionId ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesStatus = statusFilter === "all" || order.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [orders, searchQuery, statusFilter])
 
-  const refundedAmount = payments
-    .filter((p) => p.status === "refunded")
-    .reduce((sum, p) => sum + p.amount, 0)
+  const totalRevenue = orders
+    .filter((o) => o.status === "DELIVERED" || o.status === "CONFIRMED")
+    .reduce((sum, o) => sum + o.total, 0)
+
+  const pendingAmount = orders
+    .filter((o) => o.status === "PENDING")
+    .reduce((sum, o) => sum + o.total, 0)
+
+  const cancelledAmount = orders
+    .filter((o) => o.status === "CANCELLED")
+    .reduce((sum, o) => sum + o.total, 0)
+
+  const renderPaymentsTable = (paymentsList: typeof orders) => {
+    if (loading && paymentsList.length === 0) {
+      return (
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID Transaccion</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Pedido</TableHead>
+                <TableHead>Metodo</TableHead>
+                <TableHead>Monto</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead className="w-[70px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      )
+    }
+
+    if (paymentsList.length === 0) {
+      return (
+        <CardContent className="py-12 text-center">
+          <p className="text-sm text-muted-foreground">No hay transacciones</p>
+        </CardContent>
+      )
+    }
+
+    return (
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID Transaccion</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Pedido</TableHead>
+              <TableHead>Metodo</TableHead>
+              <TableHead>Monto</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Fecha</TableHead>
+              <TableHead className="w-[70px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paymentsList.map((order) => {
+              const status = statusConfig[order.status] ?? statusConfig.PENDING
+              return (
+                <TableRow key={order.id}>
+                  <TableCell className="font-mono text-sm">
+                    {order.stripeSessionId
+                      ? order.stripeSessionId.slice(0, 16) + "..."
+                      : "—"}
+                  </TableCell>
+                  <TableCell>{order.customer.name}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {order.orderNumber}
+                  </TableCell>
+                  <TableCell>{methodLabels[order.paymentMethod] ?? order.paymentMethod}</TableCell>
+                  <TableCell className="font-medium">
+                    S/ {order.total.toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={status.variant} className={status.className}>
+                      {status.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(order.createdAt).toLocaleDateString("es-PE")}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver detalles
+                        </DropdownMenuItem>
+                        {order.status === "DELIVERED" && (
+                          <DropdownMenuItem>
+                            <RefreshCcw className="mr-2 h-4 w-4" />
+                            Reembolsar
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -94,7 +218,7 @@ export default function AdminPaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">
-              S/ {totalRevenue.toLocaleString()}
+              S/ {totalRevenue.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -106,19 +230,19 @@ export default function AdminPaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-yellow-600">
-              S/ {pendingAmount.toLocaleString()}
+              S/ {pendingAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Reembolsado
+              Cancelado
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-red-600">
-              S/ {refundedAmount.toLocaleString()}
+              S/ {cancelledAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -129,7 +253,7 @@ export default function AdminPaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{payments.length}</p>
+            <p className="text-2xl font-bold">{orders.length}</p>
           </CardContent>
         </Card>
       </div>
@@ -140,7 +264,7 @@ export default function AdminPaymentsPage() {
           <TabsTrigger value="all">Todos</TabsTrigger>
           <TabsTrigger value="completed">Completados</TabsTrigger>
           <TabsTrigger value="pending">Pendientes</TabsTrigger>
-          <TabsTrigger value="failed">Fallidos</TabsTrigger>
+          <TabsTrigger value="cancelled">Cancelados</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
@@ -150,7 +274,7 @@ export default function AdminPaymentsPage() {
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Buscar por ID, cliente..."
+                placeholder="Buscar por pedido, cliente..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8"
@@ -162,232 +286,34 @@ export default function AdminPaymentsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="completed">Completado</SelectItem>
-                <SelectItem value="pending">Pendiente</SelectItem>
-                <SelectItem value="failed">Fallido</SelectItem>
-                <SelectItem value="refunded">Reembolsado</SelectItem>
+                <SelectItem value="CONFIRMED">Confirmado</SelectItem>
+                <SelectItem value="PENDING">Pendiente</SelectItem>
+                <SelectItem value="DELIVERED">Entregado</SelectItem>
+                <SelectItem value="CANCELLED">Cancelado</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Table */}
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Pago</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Pedido</TableHead>
-                    <TableHead>Metodo</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPayments.map((payment) => {
-                    const status = statusConfig[payment.status]
-                    return (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-mono text-sm">
-                          {payment.id}
-                        </TableCell>
-                        <TableCell>{payment.userName}</TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {payment.orderId}
-                        </TableCell>
-                        <TableCell>{methodLabels[payment.method]}</TableCell>
-                        <TableCell className="font-medium">
-                          S/ {payment.amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={status.variant} className={status.className}>
-                            {status.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {payment.createdAt}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver detalles
-                              </DropdownMenuItem>
-                              {payment.status === "completed" && (
-                                <DropdownMenuItem>
-                                  <RefreshCcw className="mr-2 h-4 w-4" />
-                                  Reembolsar
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <Card>{renderPaymentsTable(filteredPayments)}</Card>
         </TabsContent>
 
         <TabsContent value="completed">
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Pago</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Pedido</TableHead>
-                    <TableHead>Metodo</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments
-                    .filter((p) => p.status === "completed")
-                    .map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-mono text-sm">{payment.id}</TableCell>
-                        <TableCell>{payment.userName}</TableCell>
-                        <TableCell className="font-mono text-sm">{payment.orderId}</TableCell>
-                        <TableCell>{methodLabels[payment.method]}</TableCell>
-                        <TableCell className="font-medium">S/ {payment.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-muted-foreground">{payment.createdAt}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver detalles
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <RefreshCcw className="mr-2 h-4 w-4" />
-                                Reembolsar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+            {renderPaymentsTable(
+              orders.filter((o) => o.status === "DELIVERED" || o.status === "CONFIRMED")
+            )}
           </Card>
         </TabsContent>
 
         <TabsContent value="pending">
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Pago</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Pedido</TableHead>
-                    <TableHead>Metodo</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments
-                    .filter((p) => p.status === "pending")
-                    .map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-mono text-sm">{payment.id}</TableCell>
-                        <TableCell>{payment.userName}</TableCell>
-                        <TableCell className="font-mono text-sm">{payment.orderId}</TableCell>
-                        <TableCell>{methodLabels[payment.method]}</TableCell>
-                        <TableCell className="font-medium">S/ {payment.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-muted-foreground">{payment.createdAt}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver detalles
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+            {renderPaymentsTable(orders.filter((o) => o.status === "PENDING"))}
           </Card>
         </TabsContent>
 
-        <TabsContent value="failed">
+        <TabsContent value="cancelled">
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Pago</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Pedido</TableHead>
-                    <TableHead>Metodo</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments
-                    .filter((p) => p.status === "failed")
-                    .map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-mono text-sm">{payment.id}</TableCell>
-                        <TableCell>{payment.userName}</TableCell>
-                        <TableCell className="font-mono text-sm">{payment.orderId}</TableCell>
-                        <TableCell>{methodLabels[payment.method]}</TableCell>
-                        <TableCell className="font-medium">S/ {payment.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-muted-foreground">{payment.createdAt}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver detalles
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+            {renderPaymentsTable(orders.filter((o) => o.status === "CANCELLED"))}
           </Card>
         </TabsContent>
       </Tabs>

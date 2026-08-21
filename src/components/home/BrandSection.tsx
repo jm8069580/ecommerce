@@ -1,6 +1,15 @@
-import { brands } from "@/data/mock-products"
+"use client"
+
+import { useEffect } from "react"
+import { useProductsStore } from "@/stores/products-store"
 
 export function BrandSection() {
+  const { brands, fetchBrands } = useProductsStore()
+
+  useEffect(() => {
+    fetchBrands()
+  }, [fetchBrands])
+
   return (
     <section className="py-12 sm:py-16 border-t">
       <div className="container mx-auto px-4">

@@ -5,7 +5,8 @@ import { ChevronDown, ChevronUp, Search } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { brands } from "@/data/mock-products"
+import { useProductsStore } from "@/stores/products-store"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface BrandFilterProps {
   selectedBrands: string[]
@@ -15,6 +16,7 @@ interface BrandFilterProps {
 export function BrandFilter({ selectedBrands, onBrandsChange }: BrandFilterProps) {
   const [isOpen, setIsOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const { brands } = useProductsStore()
 
   const filteredBrands = brands.filter((brand) =>
     brand.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -56,24 +58,31 @@ export function BrandFilter({ selectedBrands, onBrandsChange }: BrandFilterProps
           </div>
 
           <div className="max-h-48 space-y-2 overflow-y-auto">
-            {filteredBrands.map((brand) => (
-              <div key={brand.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`brand-${brand.id}`}
-                  checked={selectedBrands.includes(brand.name)}
-                  onCheckedChange={() => handleBrandToggle(brand.name)}
-                />
-                <Label
-                  htmlFor={`brand-${brand.id}`}
-                  className="flex flex-1 cursor-pointer items-center justify-between text-sm"
-                >
-                  <span>{brand.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {brand.productCount}
-                  </span>
-                </Label>
-              </div>
-            ))}
+            {brands.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-2">
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                ))
+              : filteredBrands.map((brand) => (
+                  <div key={brand.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`brand-${brand.id}`}
+                      checked={selectedBrands.includes(brand.name)}
+                      onCheckedChange={() => handleBrandToggle(brand.name)}
+                    />
+                    <Label
+                      htmlFor={`brand-${brand.id}`}
+                      className="flex flex-1 cursor-pointer items-center justify-between text-sm"
+                    >
+                      <span>{brand.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {brand.productCount}
+                      </span>
+                    </Label>
+                  </div>
+                ))}
           </div>
         </div>
       )}
