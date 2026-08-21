@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProductGallery } from "@/components/products/ProductGallery"
 import { ProductDetail } from "@/components/products/ProductDetail"
+import { ProductReviews } from "@/components/products/ProductReviews"
 import { ProductCard } from "@/components/products/ProductCard"
 import { Product } from "@/types"
 import { api } from "@/lib/api"
@@ -134,6 +135,12 @@ export default function ProductPage({ params }: ProductPageProps) {
         <ProductGallery images={product.images} productName={product.name} />
         <ProductDetail product={product} />
       </div>
+
+      {/* Reviews */}
+      <section className="mt-12">
+        <h2 className="mb-6 text-2xl font-bold">Reseñas del Producto</h2>
+        <ProductReviews productId={product.id} />
+      </section>
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
