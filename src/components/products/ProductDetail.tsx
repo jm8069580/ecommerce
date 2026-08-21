@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Product } from "@/types"
 import { useCartStore } from "@/stores/cart-store"
+import { useWishlistStore } from "@/stores/wishlist-store"
+import { useAuthStore } from "@/stores/auth-store"
+import { useReviewsStore } from "@/stores/reviews-store"
+import { useEffect } from "react"
 
 interface ProductDetailProps {
   product: Product
@@ -16,6 +20,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
   const addItem = useCartStore((state) => state.addItem)
+  const { toggleWishlist, isInWishlist } = useWishlistStore()
+  const { status } = useAuthStore()
+  const inWishlist = isInWishlist(product.id)
+  const { summary, fetchSummary } = useReviewsStore()
+
+  useEffect(() => {
+    fetchSummary(product.id)
+  }, [product.id, fetchSummary])
+
+  const totalReviews = summary?.totalReviews ?? 0
 
   const hasDiscount = product.originalPrice && product.originalPrice > product.price
   const discountPercent = hasDiscount
@@ -67,7 +81,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           ))}
         </div>
         <span className="text-sm font-medium">{product.rating}</span>
-        <span className="text-sm text-muted-foreground">(128 resenas)</span>
+        <span className="text-sm text-muted-foreground">({totalReviews} reseñas)</span>
       </div>
 
       {/* Price */}
@@ -151,8 +165,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
               </>
             )}
           </Button>
-          <Button variant="outline" size="lg">
-            <Heart className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => {
+              if (status === "authenticated") toggleWishlist(product.id)
+            }}
+            disabled={status !== "authenticated"}
+            className={inWishlist ? "border-red-500 text-red-500" : ""}
+          >
+            <Heart className={`h-4 w-4 ${inWishlist ? "fill-red-500 text-red-500" : ""}`} />
           </Button>
         </div>
       </div>
