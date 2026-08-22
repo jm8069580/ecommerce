@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Save, Check } from "lucide-react"
+import { Save, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,7 +20,7 @@ import { useConfigStore } from "@/stores/config-store"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AdminSettingsPage() {
-  const { config, fetchConfig, loading } = useConfigStore()
+  const { config, fetchConfig, updateConfig, loading, saving } = useConfigStore()
 
   const initialValues = useMemo(
     () =>
@@ -42,14 +42,26 @@ export default function AdminSettingsPage() {
   )
   const [taxRate, setTaxRate] = useState(initialValues?.taxRate ?? "0")
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchConfig()
   }, [fetchConfig])
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const handleSave = async () => {
+    setSaveError(null)
+    try {
+      await updateConfig({
+        appName,
+        currency,
+        freeShippingThreshold: Number(freeShippingThreshold),
+        taxRate: Number(taxRate),
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Error al guardar")
+    }
   }
 
   if (loading && !config) {
@@ -350,9 +362,17 @@ export default function AdminSettingsPage() {
       </Tabs>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave}>
-          {saved ? (
+      <div className="flex items-center justify-end gap-3">
+        {saveError && (
+          <p className="text-sm text-destructive">{saveError}</p>
+        )}
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Guardando...
+            </>
+          ) : saved ? (
             <>
               <Check className="mr-2 h-4 w-4" />
               Guardado
