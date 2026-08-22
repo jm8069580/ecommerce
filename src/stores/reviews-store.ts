@@ -84,7 +84,7 @@ export const useReviewsStore = create<ReviewsState>((set) => ({
   updateReview: async (productId, data) => {
     set({ error: null })
     try {
-      await api.post(`/reviews/product/${productId}`, data)
+      await api.patch(`/reviews/product/${productId}`, data)
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : (error as Error).message
