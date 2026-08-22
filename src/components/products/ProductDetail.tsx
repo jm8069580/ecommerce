@@ -170,7 +170,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             variant="outline"
             size="lg"
             onClick={() => {
-              if (status === "authenticated") toggleWishlist(product.id)
+              if (status === "authenticated") toggleWishlist(product)
             }}
             disabled={status !== "authenticated"}
             className={inWishlist ? "border-red-500 text-red-500" : ""}

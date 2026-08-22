@@ -45,7 +45,7 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault()
     e.stopPropagation()
     if (status === "authenticated") {
-      toggleWishlist(product.id)
+      toggleWishlist(product)
     }
   }
 

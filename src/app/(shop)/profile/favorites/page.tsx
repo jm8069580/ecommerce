@@ -10,7 +10,7 @@ import { useWishlistStore } from "@/stores/wishlist-store"
 import { useAuthStore } from "@/stores/auth-store"
 
 export default function FavoritesPage() {
-  const { items, loading, fetchWishlist, removeFromWishlist, hydrated } =
+  const { items, loading, fetchWishlist, toggleWishlist, hydrated } =
     useWishlistStore()
   const { status } = useAuthStore()
 
@@ -65,7 +65,7 @@ export default function FavoritesPage() {
               variant="ghost"
               size="sm"
               className="text-muted-foreground"
-              onClick={() => items.forEach((item) => removeFromWishlist(item.id))}
+              onClick={() => items.forEach((item) => toggleWishlist(item))}
             >
               Limpiar lista
             </Button>

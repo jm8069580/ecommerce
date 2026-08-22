@@ -9,9 +9,7 @@ interface WishlistState {
   hydrated: boolean
 
   fetchWishlist: () => Promise<void>
-  addToWishlist: (productId: string) => Promise<void>
-  removeFromWishlist: (productId: string) => Promise<void>
-  toggleWishlist: (productId: string) => Promise<void>
+  toggleWishlist: (product: Product) => Promise<void>
   isInWishlist: (productId: string) => boolean
   clearWishlist: () => Promise<void>
 }
@@ -32,36 +30,27 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     }
   },
 
-  addToWishlist: async (productId) => {
-    set({ error: null })
-    try {
-      await api.post("/wishlist/" + productId)
-    } catch (error) {
-      set({ error: (error as Error).message })
-      throw error
-    }
-  },
+  toggleWishlist: async (product) => {
+    const exists = get().items.some((item) => item.id === product.id)
 
-  removeFromWishlist: async (productId) => {
-    const prev = get().items
-    set((state) => ({
-      items: state.items.filter((item) => item.id !== productId),
-    }))
-    try {
-      await api.delete("/wishlist/" + productId)
-    } catch (error) {
-      set({ items: prev, error: (error as Error).message })
-      throw error
-    }
-  },
-
-  toggleWishlist: async (productId) => {
-    const inWishlist = get().isInWishlist(productId)
-    if (inWishlist) {
-      await get().removeFromWishlist(productId)
+    if (exists) {
+      const prev = get().items
+      set((state) => ({
+        items: state.items.filter((item) => item.id !== product.id),
+      }))
+      try {
+        await api.delete("/wishlist/" + product.id)
+      } catch (error) {
+        set({ items: prev, error: (error as Error).message })
+      }
     } else {
-      await get().addToWishlist(productId)
-      await get().fetchWishlist()
+      const prev = get().items
+      set((state) => ({ items: [product, ...state.items] }))
+      try {
+        await api.post("/wishlist/" + product.id)
+      } catch (error) {
+        set({ items: prev, error: (error as Error).message })
+      }
     }
   },
 
@@ -70,12 +59,12 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   },
 
   clearWishlist: async () => {
+    const prev = get().items
     set({ items: [] })
     try {
       await api.delete("/wishlist")
     } catch (error) {
-      set({ error: (error as Error).message })
-      throw error
+      set({ items: prev, error: (error as Error).message })
     }
   },
 }))
