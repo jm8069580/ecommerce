@@ -42,7 +42,7 @@ export function MobileNav() {
           {/* User Actions */}
           <div className="flex flex-col gap-2">
             <Link
-              href="/account"
+              href="/profile"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
             >
@@ -50,7 +50,7 @@ export function MobileNav() {
               Mi Cuenta
             </Link>
             <Link
-              href="/favorites"
+              href="/profile/favorites"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
             >
@@ -58,7 +58,7 @@ export function MobileNav() {
               Favoritos
             </Link>
             <Link
-              href="/orders"
+              href="/profile/orders"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
             >

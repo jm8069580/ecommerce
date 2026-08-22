@@ -18,6 +18,7 @@ import { ThemeToggle } from "./ThemeToggle"
 import { MobileNav } from "./MobileNav"
 import { useCartStore } from "@/stores/cart-store"
 import { useAuthStore } from "@/stores/auth-store"
+import { useWishlistStore } from "@/stores/wishlist-store"
 
 export function Header() {
   const mounted = useSyncExternalStore(
@@ -26,6 +27,7 @@ export function Header() {
     () => false
   )
   const itemCount = useCartStore((state) => state.getItemCount())
+  const wishlistCount = useWishlistStore((state) => state.items.length)
   const { user, status, logout } = useAuthStore()
 
   return (
@@ -71,10 +73,20 @@ export function Header() {
 
             <ThemeToggle />
 
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Heart className="h-4 w-4" />
-              <span className="sr-only">Favoritos</span>
-            </Button>
+            <Link href="/profile/favorites">
+              <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                <Heart className="h-4 w-4" />
+                {mounted && wishlistCount > 0 && (
+                  <Badge
+                    className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+                    variant="destructive"
+                  >
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </Badge>
+                )}
+                <span className="sr-only">Favoritos</span>
+              </Button>
+            </Link>
 
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative h-9 w-9">

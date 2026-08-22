@@ -21,9 +21,10 @@ const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1629429408209-1f912
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const [added, setAdded] = useState(false)
-  const { toggleWishlist, isInWishlist } = useWishlistStore()
+  const wishlistItems = useWishlistStore((state) => state.items)
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist)
   const { status } = useAuthStore()
-  const inWishlist = isInWishlist(product.id)
+  const inWishlist = wishlistItems.some((item) => item.id === product.id)
 
   const hasDiscount = product.originalPrice && product.originalPrice > product.price
   const discountPercent = hasDiscount
