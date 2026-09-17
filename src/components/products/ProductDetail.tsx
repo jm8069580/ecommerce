@@ -10,6 +10,7 @@ import { useCartStore } from "@/stores/cart-store"
 import { useWishlistStore } from "@/stores/wishlist-store"
 import { useAuthStore } from "@/stores/auth-store"
 import { useReviewsStore } from "@/stores/reviews-store"
+import { useConfigStore } from "@/stores/config-store"
 import { useEffect } from "react"
 
 interface ProductDetailProps {
@@ -25,6 +26,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const { status } = useAuthStore()
   const inWishlist = wishlistItems.some((item) => item.id === product.id)
   const { summary, fetchSummary } = useReviewsStore()
+  const freeShippingThreshold = useConfigStore(
+    (state) => state.config?.freeShippingThreshold ?? 200
+  )
 
   useEffect(() => {
     fetchSummary(product.id)
@@ -88,11 +92,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
       {/* Price */}
       <div className="flex items-baseline gap-3">
         <span className="text-3xl font-bold text-primary">
-          S/ {product.price.toFixed(2)}
+          $ {product.price.toFixed(2)}
         </span>
         {hasDiscount && (
           <span className="text-lg text-muted-foreground line-through">
-            S/ {product.originalPrice!.toFixed(2)}
+            $ {product.originalPrice!.toFixed(2)}
           </span>
         )}
       </div>
@@ -188,7 +192,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <Truck className="h-5 w-5 text-muted-foreground" />
           <div>
             <p className="font-medium">Envio gratis</p>
-            <p className="text-xs text-muted-foreground">En pedidos +S/ 200</p>
+            <p className="text-xs text-muted-foreground">
+              En pedidos +${freeShippingThreshold}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3 text-sm">

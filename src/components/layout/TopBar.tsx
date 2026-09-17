@@ -7,7 +7,7 @@ export function TopBar() {
         <div className="flex h-9 items-center justify-between text-xs">
           <div className="flex items-center gap-1">
             <span className="hidden sm:inline">Envio a</span>
-            <span className="font-semibold">Peru</span>
+            <span className="font-semibold">Panama</span>
           </div>
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-1.5">

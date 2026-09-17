@@ -36,7 +36,7 @@ export default function AdminSettingsPage() {
   )
 
   const [appName, setAppName] = useState(initialValues?.appName ?? "")
-  const [currency, setCurrency] = useState(initialValues?.currency ?? "pen")
+  const [currency, setCurrency] = useState(initialValues?.currency ?? "usd")
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(
     initialValues?.freeShippingThreshold ?? "200"
   )
@@ -119,11 +119,11 @@ export default function AdminSettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="storePhone">Telefono</Label>
-                  <Input id="storePhone" defaultValue="+51 999 888 777" />
+                  <Input id="storePhone" defaultValue="+507 999 888 77" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="storeAddress">Direccion</Label>
-                  <Input id="storeAddress" defaultValue="Av. Tecnologia 123, Lima" />
+                  <Input id="storeAddress" defaultValue="Av. Tecnologia 123, Ciudad de Panama" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -147,12 +147,12 @@ export default function AdminSettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Zona horaria</Label>
-                  <Select defaultValue="america-lima">
+                  <Select defaultValue="america-panama">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="america-lima">America/Lima (GMT-5)</SelectItem>
+                      <SelectItem value="america-panama">America/Panama (GMT-5)</SelectItem>
                       <SelectItem value="america-bogota">America/Bogota (GMT-5)</SelectItem>
                       <SelectItem value="america-mexico">America/Mexico_City (GMT-6)</SelectItem>
                     </SelectContent>
@@ -165,8 +165,8 @@ export default function AdminSettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pen">Soles (S/)</SelectItem>
                       <SelectItem value="usd">Dolares ($)</SelectItem>
+                      <SelectItem value="pen">Soles (S/)</SelectItem>
                       <SelectItem value="eur">Euros (EUR)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -228,7 +228,7 @@ export default function AdminSettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Envio gratis desde (S/)</Label>
+                  <Label>Envio gratis desde (US$)</Label>
                   <Input
                     type="number"
                     value={freeShippingThreshold}
@@ -236,7 +236,7 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Tasa de impuesto (0.18 = 18%)</Label>
+                  <Label>Tasa de impuesto (0.07 = 7% ITBMS)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -331,7 +331,7 @@ export default function AdminSettingsPage() {
                 <div>
                   <p className="font-medium">Transferencia bancaria</p>
                   <p className="text-sm text-muted-foreground">
-                    BCP, BBVA, Interbank, Scotiabank
+                    Banco General, BAC Credomatic, Banistmo
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -341,7 +341,7 @@ export default function AdminSettingsPage() {
                 <div>
                   <p className="font-medium">Billeteras digitales</p>
                   <p className="text-sm text-muted-foreground">
-                    Yape, Plin, PayPal
+                    Nequi, PayPal
                   </p>
                 </div>
                 <Switch defaultChecked />

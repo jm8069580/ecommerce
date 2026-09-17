@@ -266,7 +266,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               </p>
             )}
             <p className="mt-2 text-xs text-muted-foreground">
-              {new Date(userReview.createdAt).toLocaleDateString("es-PE", {
+              {new Date(userReview.createdAt).toLocaleDateString("es-PA", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -326,7 +326,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(review.createdAt).toLocaleDateString("es-PE", {
+                      {new Date(review.createdAt).toLocaleDateString("es-PA", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",

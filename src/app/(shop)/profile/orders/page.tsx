@@ -102,7 +102,7 @@ export default function OrdersPage() {
                     <div>
                       <CardTitle className="text-base">{order.orderNumber}</CardTitle>
                       <CardDescription>
-                        {new Date(order.createdAt).toLocaleDateString("es-PE", {
+                        {new Date(order.createdAt).toLocaleDateString("es-PA", {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
@@ -130,7 +130,7 @@ export default function OrdersPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.name}</p>
                           <p className="text-sm">
-                            S/ {item.price.toFixed(2)} x {item.quantity}
+                            $ {item.price.toFixed(2)} x {item.quantity}
                           </p>
                         </div>
                       </div>
@@ -153,7 +153,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <p className="font-semibold">
-                        Total: S/ {order.total.toFixed(2)}
+                        Total: $ {order.total.toFixed(2)}
                       </p>
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/profile/orders/${order.id}`}>

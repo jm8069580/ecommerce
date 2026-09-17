@@ -117,7 +117,7 @@ export default function ProfilePage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Gastado</CardDescription>
-            <CardTitle className="text-2xl">S/ {stats.totalSpent.toFixed(2)}</CardTitle>
+            <CardTitle className="text-2xl">$ {stats.totalSpent.toFixed(2)}</CardTitle>
           </CardHeader>
         </Card>
       </div>

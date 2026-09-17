@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "BasicTechShop - Tu Tienda de Tecnologia",
-  description: "Los mejores productos de computacion: PCs, monitores, teclados, mouse y mas. Envio a todo Peru.",
+  description: "Los mejores productos de computacion: PCs, monitores, teclados, mouse y mas. Envio a todo Panama.",
 }
 
 export default function RootLayout({

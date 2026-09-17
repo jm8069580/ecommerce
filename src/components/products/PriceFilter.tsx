@@ -68,7 +68,7 @@ export function PriceFilter({
               <label className="text-xs text-muted-foreground">Min</label>
               <div className="relative">
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  S/
+                  $
                 </span>
                 <Input
                   type="number"
@@ -85,7 +85,7 @@ export function PriceFilter({
               <label className="text-xs text-muted-foreground">Max</label>
               <div className="relative">
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  S/
+                  $
                 </span>
                 <Input
                   type="number"

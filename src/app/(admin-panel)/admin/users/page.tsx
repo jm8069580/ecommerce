@@ -167,7 +167,7 @@ export default function AdminUsersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">S/ {totalSpent.toLocaleString()}</p>
+            <p className="text-2xl font-bold">$ {totalSpent.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
@@ -261,9 +261,9 @@ export default function AdminUsersPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>{user.orders}</TableCell>
-                        <TableCell>S/ {user.totalSpent.toFixed(2)}</TableCell>
+                        <TableCell>$ {user.totalSpent.toFixed(2)}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(user.createdAt).toLocaleDateString("es-PE")}
+                          {new Date(user.createdAt).toLocaleDateString("en-US")}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>

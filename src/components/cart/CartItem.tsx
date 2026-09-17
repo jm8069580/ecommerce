@@ -77,11 +77,11 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
           {/* Price */}
           <div className="text-right">
             <p className="font-semibold text-primary">
-              S/ {(product.price * quantity).toFixed(2)}
+              $ {(product.price * quantity).toFixed(2)}
             </p>
             {quantity > 1 && (
               <p className="text-xs text-muted-foreground">
-                S/ {product.price.toFixed(2)} c/u
+                $ {product.price.toFixed(2)} c/u
               </p>
             )}
           </div>

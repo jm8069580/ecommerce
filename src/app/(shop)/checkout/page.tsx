@@ -302,7 +302,7 @@ export default function CheckoutPage() {
                         <span className="text-muted-foreground">
                           {item.quantity}x {item.product.name}
                         </span>
-                        <span>S/ {(item.product.price * item.quantity).toFixed(2)}</span>
+                        <span>$ {(item.product.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>

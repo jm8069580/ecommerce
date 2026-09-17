@@ -152,7 +152,7 @@ export default function AdminPaymentsPage() {
                   </TableCell>
                   <TableCell>{methodLabels[order.paymentMethod] ?? order.paymentMethod}</TableCell>
                   <TableCell className="font-medium">
-                    S/ {order.total.toFixed(2)}
+                    $ {order.total.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <Badge variant={status.variant} className={status.className}>
@@ -160,7 +160,7 @@ export default function AdminPaymentsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {new Date(order.createdAt).toLocaleDateString("es-PE")}
+                    {new Date(order.createdAt).toLocaleDateString("en-US")}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -218,7 +218,7 @@ export default function AdminPaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">
-              S/ {totalRevenue.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
+              $ {totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -230,7 +230,7 @@ export default function AdminPaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-yellow-600">
-              S/ {pendingAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
+              $ {pendingAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
@@ -242,7 +242,7 @@ export default function AdminPaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-red-600">
-              S/ {cancelledAmount.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
+              $ {cancelledAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </p>
           </CardContent>
         </Card>
